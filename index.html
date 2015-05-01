@@ -3,12 +3,10 @@
 <head lang="en">
     <meta charset="UTF-8">
     <!-- <script src="bower_components/jquery/dist/jquery.js"></script> -->
-    <script src="bower_components/d3/d3.js"></script>
+<!--    <script src="bower_components/d3/d3.js"></script> -->
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <link href="p2.css" type="text/css" rel="stylesheet"/>
     <title>Demo</title>
-    <style>
-
-    </style>
 </head>
 <body>
 <div>
@@ -17,6 +15,8 @@
     Zoom<span id="zoomValue"></span>
 </div>
 <svg id="chart" style="left: 100px; top: 50px; position: absolute;"></svg>
+
+<div>Double click for reset zoom</div>
 <script>
     function ja_start(barData) {
 
@@ -89,7 +89,7 @@
                 w = 5;
             }
 
-            d3.select("#zoomValue").text(" " + d3.round(zoom.scale(), 2) + " = " + zoom.translate());
+            d3.select("#zoomValue").text(" "+č d3.round(zoom.scale(), 2) );
 
             d3.selectAll("#peaks>rect").attr("width", w);
 
