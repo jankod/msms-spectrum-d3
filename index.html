@@ -10,13 +10,13 @@
 </head>
 <body>
 <div>
-
+    <div>Double click for reset zoom. </div>
     <button id="resetBtn">Reset zoom</button>
     Zoom<span id="zoomValue"></span>
 </div>
 <svg id="chart" style="left: 100px; top: 50px; position: absolute;"></svg>
 
-<div>Double click for reset zoom</div>
+
 <script>
     function ja_start(barData) {
 
@@ -89,7 +89,7 @@
                 w = 5;
             }
 
-            d3.select("#zoomValue").text(" "+č d3.round(zoom.scale(), 2) );
+            d3.select("#zoomValue").text(" "+ d3.round(zoom.scale(), 2) );
 
             d3.selectAll("#peaks>rect").attr("width", w);
 
