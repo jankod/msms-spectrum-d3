@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <!-- <script src="bower_components/jquery/dist/jquery.js"></script> -->
+    <script src="bower_components/d3/d3.js"></script>
+    <link href="p2.css" type="text/css" rel="stylesheet"/>
+    <title>Demo</title>
+    <style>
+
+    </style>
+</head>
+<body>
+<div>
+
+    <button id="resetBtn">Reset zoom</button>
+    Zoom<span id="zoomValue"></span>
+</div>
+<svg id="chart" style="left: 100px; top: 50px; position: absolute;"></svg>
+<script>
+    function ja_start(barData) {
+
+        var vis = d3.select("#chart");
+        var WIDTH = 1000;
+        var HEIGHT = 500;
+        vis.attr("height", HEIGHT + 50);
+        vis.attr("width", WIDTH);
+
+        var MARGINS = {
+            top: 20,
+            right: 20,
+            bottom: 20,
+            left: 50
+        };
+
+        var xRange = d3.scale.linear().clamp(true)
+                .range([MARGINS.left, WIDTH - MARGINS.right])
+                .domain([0, d3.max(barData, function (d) {
+                    return d.x;
+                })]);
+
+
+        var yRange = d3.scale.linear().range([
+            HEIGHT - MARGINS.top,
+            MARGINS.bottom
+        ]).domain([0, 100]);
+
+        var xAxis = d3.svg.axis().scale(xRange).tickSize(5).tickSubdivide(true);
+        var yAxis = d3.svg.axis().scale(yRange).tickSize(5).orient('left').tickSubdivide(true).tickFormat(d3.format(""));
+
+        var minZoom = 1;
+        var maxZoom = 30;
+        var zoom = d3.behavior.zoom();
+        zoom.scaleExtent([minZoom, maxZoom]).x(xRange)
+            // .scaleExtent([1, 10])
+                .on("zoom", zoomed);
+
+
+
+        function zoomed() {
+
+           vis.select(".x.axis").call(xAxis);
+
+
+             vis.selectAll(".r").attr('x', function (d) {
+             return  xRange(d.x) ;
+             });
+
+             vis.selectAll(".pikMass").attr('x', function (d) {
+             return xRange(d.x) ;
+             });
+
+
+
+            // vis.selectAll(".r, .pikMass").attr("transform", "translate(" + d3.event.translate[0] + ",0)scale(" + d3.event.scale + ", 1)");
+
+//            var zoomTranslate = zoom.translate();
+  //          d3.selectAll(".pikMass, .r").attr("transform", "translate("+zoomTranslate[0]+","+0+")")
+
+            var t = zoom.scale();
+            var w = 1;
+            if (t > 2 && t < 4) {
+                w = 2;
+            }
+            if (t > 5 && t < 7) {
+                w = 4;
+            }
+            if (t > 7) {
+                w = 5;
+            }
+
+            d3.select("#zoomValue").text(" " + d3.round(zoom.scale(), 2) + " = " + zoom.translate());
+
+            d3.selectAll("#peaks>rect").attr("width", w);
+
+        }
+
+        vis.call(zoom)
+        .on("dblclick.zoom", function () {
+            resetZoom();
+        });
+
+        d3.select("#resetBtn").on("click", resetZoom);
+        //vis.on("dblclick", resetZoom);
+
+        function resetZoom() {
+            // alert("de");
+            zoom.scale(1);
+            zoom.translate([0, 0]);
+            //vis.transition().duration(500).attr('transform', 'translate(' + zoom.translate() + ') scale(' + zoom.scale() + ')')
+            zoomed();
+        }
+
+        vis.append('svg:g').attr('class', 'x axis').attr('transform', 'translate(0,' + (HEIGHT - MARGINS.bottom) + ')')
+                .call(xAxis)
+                .append("text")
+                .attr("y", MARGINS.bottom + 20)
+                .attr("x", WIDTH / 2)
+            // .attr("dy", ".71em")
+            // .style("text-anchor", "end")
+                .text("Mass (Da)");
+
+
+        vis.append('svg:g').attr('class', 'y axis').attr('transform', 'translate(' + MARGINS.left + ',0)')
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -48)
+                .attr("x", -HEIGHT / 2)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Intensity (%)");
+
+        var gBar = vis.append('svg:g').attr("id", "peaks");
+        gBar.on("click", function (ee) {
+            //alert(ee);
+        });
+        // vis.select("svg.g").on("dblclick.zoom", null);
+
+        // text pik mass
+        gBar.selectAll('text').data(barData).enter()
+                .append('text')
+                .attr("class", "pikMass")
+                .attr('x', function (d) {
+                    var xPos = xRange(d.x);
+                    return xPos;
+                })
+                .attr('fill', 'black')
+                .on('mouseover', function (d) {
+                    d3.select(this).attr('fill', 'blue');
+                })
+                .on('mouseout', function (d) {
+                    d3.select(this).attr('fill', 'black');
+                })
+                .attr('y', function (d) {
+                    p = yRange(d.perc);
+                    return p;
+                }).text(function (d, e) {
+                    if (d.perc > 25) {
+                        //  console.log("e "+ d.x, e);
+                        return d.x;
+                    }
+                    else
+                        return "";
+                });
+
+        gBar.selectAll('rect').data(barData).enter()
+                .append('rect')
+                .attr('x', function (d) {
+                    return xRange(d.x);
+                })
+                .attr('y', function (d) {
+                    p = yRange(d.perc);
+                    return p;
+                })
+                .attr("class", "r")
+                .attr('width', 1)
+
+                .attr('height', function (d) {
+                    return HEIGHT - MARGINS.bottom - yRange(d.perc);
+                })
+                .attr('fill', '#006600')
+                .on('mouseover', function (d) {
+                    d3.select(this).attr('fill', 'blue');
+                })
+                .on('mouseout', function (d) {
+                    d3.select(this).attr('fill', 'black');
+                })
+                .on("click", function (d) {
+                    console.log(d);
+                }).append("title").text(function (d) {
+                    return d.x;
+                });
+    }
+
+    function loadData() {
+        var file = "msms_1243.4327.tsv";
+        d3.tsv(file, function (error, data) {
+            data.map(function (d) {
+                d.y = parseFloat(d.y);
+                d.x = parseFloat(d.x);
+                // console.log("x "+ d.x + "  "+ " y "+ d.);
+            })
+            var maxY = d3.max(data, function (d) {
+                return d.y;
+            });
+            // console.log("maxY", maxY);
+            data.forEach(function (d) {
+                d.perc = d.y / (maxY / 100);
+                //  console.log("y={0} max={1} perc={2}".format(d.y, maxY, d.perc)+"");
+            });
+            ja_start(data);
+        });
+    }
+
+    loadData();
+</script>
+</body>
+</html>
